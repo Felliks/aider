@@ -46,19 +46,9 @@ class LazyLiteLLM:
     
     def _configure_pending_langfuse_callbacks(self):
         """Configure any pending Langfuse callbacks from Coder instances."""
-        # Check if any Coder instances have pending Langfuse handlers
-        # This is a bit hacky but necessary due to the lazy loading
-        import gc
-        for obj in gc.get_objects():
-            if hasattr(obj, '_pending_langfuse_handler') and hasattr(obj, 'use_langfuse'):
-                if obj.use_langfuse and obj._pending_langfuse_handler:
-                    if not hasattr(self._lazy_module, 'callbacks'):
-                        self._lazy_module.callbacks = []
-                    if obj._pending_langfuse_handler not in self._lazy_module.callbacks:
-                        self._lazy_module.callbacks.append(obj._pending_langfuse_handler)
-                    # Remove the pending handler
-                    if hasattr(obj, '_pending_langfuse_handler'):
-                        delattr(obj, '_pending_langfuse_handler')
+        # Check if langfuse should be enabled
+        if os.environ.get("LANGFUSE_PUBLIC_KEY") and os.environ.get("LANGFUSE_SECRET_KEY"):
+            self._lazy_module.success_callback = ["langfuse"]
 
 
 litellm = LazyLiteLLM()

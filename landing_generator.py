@@ -264,17 +264,15 @@ async def run_aider_python_api_essential(working_dir: str, landing: dict):
             detect_urls=False,
             # Langfuse parameters
             use_langfuse=True,
-            langfuse_public_key=landing.get('langfuse_public_key'),
-            langfuse_secret_key=landing.get('langfuse_secret_key'),
-            langfuse_host=landing.get('langfuse_host'),
-            langfuse_user_id=landing.get('user_id'),
-            langfuse_session_id=landing.get('session_id'),
+            langfuse_user_id=landing['user']['id'],
+            langfuse_session_id=f"Landing #{landing['id']}",
             langfuse_metadata={
-                'landing_id': landing['id'],
-                'quality': landing['quality'],
-                'sections_count': len(landing['sections'])
+                "landing_id": landing['id'],
+                "entity_type": "landing",
+                "quality": landing.get('quality', 'standard'),
+                "language": landing.get('language', 'en')
             },
-            langfuse_tags=['landing_generator', landing['quality'], 'essential'],
+            langfuse_tags=["landing", f"quality-{landing.get('quality', 'standard')}"]
         )
 
         coder.run('/read-only CREATE_TASK.md')
@@ -423,17 +421,15 @@ async def run_aider_python_api_expert(working_dir: str, landing: dict):
             detect_urls=False,
             # Langfuse parameters
             use_langfuse=True,
-            langfuse_public_key=landing.get('langfuse_public_key'),
-            langfuse_secret_key=landing.get('langfuse_secret_key'),
-            langfuse_host=landing.get('langfuse_host'),
-            langfuse_user_id=landing.get('user_id'),
-            langfuse_session_id=landing.get('session_id'),
+            langfuse_user_id=landing['user']['id'],
+            langfuse_session_id=f"Landing #{landing['id']}",
             langfuse_metadata={
-                'landing_id': landing['id'],
-                'quality': landing['quality'],
-                'sections_count': len(landing['sections'])
+                "landing_id": landing['id'],
+                "entity_type": "landing",
+                "quality": landing.get('quality', 'standard'),
+                "language": landing.get('language', 'en')
             },
-            langfuse_tags=['landing_generator', landing['quality'], 'expert'],
+            langfuse_tags=["landing", f"quality-{landing.get('quality', 'standard')}"]
         )
 
         coder.run('/read-only CREATE_TASK.md')
@@ -553,17 +549,15 @@ async def run_aider_python_api_master(working_dir: str, landing: dict):
             detect_urls=False,
             # Langfuse parameters
             use_langfuse=True,
-            langfuse_public_key=landing.get('langfuse_public_key'),
-            langfuse_secret_key=landing.get('langfuse_secret_key'),
-            langfuse_host=landing.get('langfuse_host'),
-            langfuse_user_id=landing.get('user_id'),
-            langfuse_session_id=landing.get('session_id'),
+            langfuse_user_id=landing['user']['id'],
+            langfuse_session_id=f"Landing #{landing['id']}",
             langfuse_metadata={
-                'landing_id': landing['id'],
-                'quality': landing['quality'],
-                'sections_count': len(landing['sections'])
+                "landing_id": landing['id'],
+                "entity_type": "landing",
+                "quality": landing.get('quality', 'standard'),
+                "language": landing.get('language', 'en')
             },
-            langfuse_tags=['landing_generator', landing['quality'], 'master'],
+            langfuse_tags=["landing", f"quality-{landing.get('quality', 'standard')}"]
         )
 
         coder.run('/read-only CREATE_TASK.md')

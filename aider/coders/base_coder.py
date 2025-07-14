@@ -368,9 +368,6 @@ class Coder:
         self.langfuse_session_id = langfuse_session_id
         self.langfuse_metadata = langfuse_metadata or {}
         self.langfuse_tags = langfuse_tags or []
-        
-        # Initialize Langfuse if enabled
-        self._setup_langfuse()
 
         self.event = self.analytics.event
         self.chat_language = chat_language
@@ -433,6 +430,9 @@ class Coder:
             self.done_messages = []
 
         self.io = io
+        
+        # Initialize Langfuse after io is set
+        self._setup_langfuse()
 
         self.shell_commands = []
 
@@ -2522,7 +2522,6 @@ class Coder:
         # Import langfuse here to avoid import errors if not installed
         try:
             from langfuse import Langfuse
-            from langfuse.callback import CallbackHandler
         except ImportError:
             self.io.tool_warning("Langfuse is not installed. Run 'pip install langfuse' to enable tracing.")
             self.use_langfuse = False
@@ -2531,7 +2530,7 @@ class Coder:
         # Check for credentials - prioritize explicit parameters over env vars
         public_key = self.langfuse_public_key or os.environ.get("LANGFUSE_PUBLIC_KEY")
         secret_key = self.langfuse_secret_key or os.environ.get("LANGFUSE_SECRET_KEY")
-        host = self.langfuse_host or os.environ.get("LANGFUSE_HOST")
+        host = self.langfuse_host or os.environ.get("LANGFUSE_HOST", "https://cloud.langfuse.com")
         
         if not public_key or not secret_key:
             if self.verbose:
@@ -2544,31 +2543,34 @@ class Coder:
             langfuse_kwargs = {
                 "public_key": public_key,
                 "secret_key": secret_key,
+                "host": host,
             }
-            if host:
-                langfuse_kwargs["host"] = host
                 
             self.langfuse_client = Langfuse(**langfuse_kwargs)
             
-            # Create callback handler for litellm
-            self.langfuse_handler = CallbackHandler(
-                public_key=public_key,
-                secret_key=secret_key,
-                host=host,
-                user_id=self.langfuse_user_id,
-                session_id=self.langfuse_session_id,
-                metadata=self.langfuse_metadata,
-                tags=self.langfuse_tags,
-            )
+            # Set up litellm callback integration
+            # Langfuse automatically integrates with litellm when initialized
+            os.environ["LANGFUSE_PUBLIC_KEY"] = public_key
+            os.environ["LANGFUSE_SECRET_KEY"] = secret_key
+            os.environ["LANGFUSE_HOST"] = host
             
-            # Configure litellm to use Langfuse callback
-            from aider.llm import configure_langfuse_callback
-            configure_langfuse_callback(self.langfuse_handler)
-            # Also store as pending in case litellm hasn't loaded yet
-            self._pending_langfuse_handler = self.langfuse_handler
+            # Set user/session context in environment
+            if self.langfuse_user_id:
+                os.environ["LANGFUSE_USER_ID"] = self.langfuse_user_id
+            if self.langfuse_session_id:
+                os.environ["LANGFUSE_SESSION_ID"] = self.langfuse_session_id
+            
+            # Enable litellm callback
+            from aider.llm import litellm
+            if litellm._lazy_module is not None:
+                # If litellm is already loaded, configure it
+                litellm.success_callback = ["langfuse"]
+            else:
+                # Store flag to configure when litellm loads
+                self._pending_langfuse_setup = True
                 
             if self.verbose:
-                self.io.tool_output("Langfuse tracing enabled.")
+                self.io.tool_output(f"Langfuse tracing enabled (host: {host}).")
                 
         except Exception as e:
             self.io.tool_warning(f"Failed to initialize Langfuse: {str(e)}")
