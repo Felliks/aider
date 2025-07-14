@@ -34,9 +34,13 @@ from aider.commands import Commands
 from aider.exceptions import LiteLLMExceptions
 from aider.history import ChatSummary
 from aider.io import ConfirmGroup, InputOutput
+from aider.langfuse_monkey_patch import patch_litellm_langfuse
 from aider.linter import Linter
 from aider.llm import litellm
 from aider.models import RETRY_TIMEOUT
+
+# Apply Langfuse v3 compatibility patch
+patch_litellm_langfuse()
 from aider.reasoning_tags import (
     REASONING_TAG,
     format_reasoning_content,
@@ -2519,9 +2523,9 @@ class Coder:
         if not self.use_langfuse:
             return
             
-        # Import langfuse here to avoid import errors if not installed
+        # Check if langfuse is installed
         try:
-            from langfuse import Langfuse
+            import langfuse
         except ImportError:
             self.io.tool_warning("Langfuse is not installed. Run 'pip install langfuse' to enable tracing.")
             self.use_langfuse = False
@@ -2539,26 +2543,20 @@ class Coder:
             return
             
         try:
-            # Initialize Langfuse client
-            langfuse_kwargs = {
-                "public_key": public_key,
-                "secret_key": secret_key,
-                "host": host,
-            }
-                
-            self.langfuse_client = Langfuse(**langfuse_kwargs)
-            
-            # Set up litellm callback integration
-            # Langfuse automatically integrates with litellm when initialized
+            # Set up litellm callback integration via environment variables
             os.environ["LANGFUSE_PUBLIC_KEY"] = public_key
             os.environ["LANGFUSE_SECRET_KEY"] = secret_key
             os.environ["LANGFUSE_HOST"] = host
             
             # Set user/session context in environment
             if self.langfuse_user_id:
-                os.environ["LANGFUSE_USER_ID"] = self.langfuse_user_id
+                os.environ["LANGFUSE_USER_ID"] = str(self.langfuse_user_id)
             if self.langfuse_session_id:
-                os.environ["LANGFUSE_SESSION_ID"] = self.langfuse_session_id
+                os.environ["LANGFUSE_SESSION_ID"] = str(self.langfuse_session_id)
+            if self.langfuse_metadata:
+                os.environ["LANGFUSE_METADATA"] = json.dumps(self.langfuse_metadata)
+            if self.langfuse_tags:
+                os.environ["LANGFUSE_TAGS"] = json.dumps(self.langfuse_tags)
             
             # Enable litellm callback
             from aider.llm import litellm

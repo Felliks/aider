@@ -264,7 +264,7 @@ async def run_aider_python_api_essential(working_dir: str, landing: dict):
             detect_urls=False,
             # Langfuse parameters
             use_langfuse=True,
-            langfuse_user_id=landing['user']['id'],
+            langfuse_user_id=str(landing['user']['id']),
             langfuse_session_id=f"Landing #{landing['id']}",
             langfuse_metadata={
                 "landing_id": landing['id'],
@@ -421,7 +421,7 @@ async def run_aider_python_api_expert(working_dir: str, landing: dict):
             detect_urls=False,
             # Langfuse parameters
             use_langfuse=True,
-            langfuse_user_id=landing['user']['id'],
+            langfuse_user_id=str(landing['user']['id']),
             langfuse_session_id=f"Landing #{landing['id']}",
             langfuse_metadata={
                 "landing_id": landing['id'],
@@ -549,7 +549,7 @@ async def run_aider_python_api_master(working_dir: str, landing: dict):
             detect_urls=False,
             # Langfuse parameters
             use_langfuse=True,
-            langfuse_user_id=landing['user']['id'],
+            langfuse_user_id=str(landing['user']['id']),
             langfuse_session_id=f"Landing #{landing['id']}",
             langfuse_metadata={
                 "landing_id": landing['id'],
