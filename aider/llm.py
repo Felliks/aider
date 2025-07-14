@@ -57,7 +57,8 @@ class LazyLiteLLM:
                     if obj._pending_langfuse_handler not in self._lazy_module.callbacks:
                         self._lazy_module.callbacks.append(obj._pending_langfuse_handler)
                     # Remove the pending handler
-                    delattr(obj, '_pending_langfuse_handler')
+                    if hasattr(obj, '_pending_langfuse_handler'):
+                        delattr(obj, '_pending_langfuse_handler')
 
 
 litellm = LazyLiteLLM()
